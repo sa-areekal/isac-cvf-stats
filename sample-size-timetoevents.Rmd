@@ -1,0 +1,143 @@
+---
+title: "Sample size calculations"
+author: "Sandra"
+date: "2024-06-26"
+output: html_document
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+
+#file dependencies
+#references.bib
+```
+
+## Sample size calculations for binary and time-to-event outcomes
+
+Following [@riley2018a], the sample size for binary and time-to-event outcomes is calculated based on the following criteria.
+
+### Step 1: Select the number of candidate predictors: \$p\$
+
+If you do not know the number of predictors, let's assume a relatively high value for p=40
+
+```{r}
+# define p: number of predictors in the model
+p = 40
+
+```
+
+### Step 2: The anticipated proportion of variance explained $R^2_{adj}$
+
+1.  Choose $R^2_{adj}$ based on previous literature
+2.  In the absence of any evidence choose \$R\^2\_{CS_adj}= 0.1\$
+
+```{r}
+
+R2_adj = 0.15
+```
+
+### Step 3: Criterion (1): Calculate the minimum sample required to calculate the Copas' global shrinkage factor (\$S_c\$) close to 1. Generally, recommended value is an Sc greater than or equal to 0.90
+
+$$
+Sc = 1 + \dfrac{p-2}{n \ln(1- \big(\dfrac{R^2_adj (n-p-1)+p}{(n-1)}\big)\big)}
+$$
+
+```{r}
+# To ensure an expected Sc >= 0.09, with 40 predictors and $R^2_adj = 0.15$
+Sc = 0.9 
+
+# The number of smaple required can be calculated using criteria 1 as: 
+calc_sample_size_crit1 <- function(Sc = 0.9, p = 40, R2_adj = 0.15) {
+  # Define the function to solve
+  equation <- function(n) {
+    lhs <- 1 + (p - 2) / (n * log(1 - ((R2_adj * (n - p - 1) + p) / (n - 1))))
+    return(lhs - Sc)
+  }
+  
+  # Use uniroot to find the value of n that solves the equation
+  result <- uniroot(equation, interval = c(p + 2, 1e6))$root
+  return(result)
+}
+
+# # Example usage:
+# p <- 40   # Number of predictors
+# R2_adj <- 0.15  # Adjusted R-squared value
+# n <- calc_sample_size_crit1(p = p, R2_adj = R2_adj)
+# print(n)
+# 
+# calc_sample_size_crit1(Sc, p, R2_adj)
+
+```
+
+n calculated from criterion 1, named n_crit1
+
+```{r}
+n_crit1 <- calc_sample_size_crit1() %>% print
+```
+
+To verify the calculation, recalculate the Sc based on the $n$ estimated above
+
+```{r}
+final_sc <-  1 + (p - 2) / (n_crit1 * log(1 - ((R2_adj * (n_crit1 - p - 1) + p) / (n_crit1 - 1))))
+print(final_sc)
+```
+
+### Step 4: Criterion (ii): calculating sample size to ensure a small absolute difference in $R^2_{adj}$ and $R^2_{app$
+
+$$
+n \geq 1 + \dfrac{p \big( 1- R^_{adj} \big)}{\delta}
+$$
+
+```{r}
+calc_sample_size_crit2 <- function(p, R2_adj, delta) {
+  result <- 1 + (p * (1 - R2_adj)) / delta
+  return(result)
+}
+
+n_crit2 = calc_sample_size_crit2(p=40, R2_adj = 0.15, delta = 0.05 )
+n_crit2
+```
+
+### Step 5: Criterion (iii): precise estimate of the residual standard deviation
+
+The recommended margin of multiplicative margin of error(MMOE): $1.0 \leq MMOE \leq 1.1$ The generally recommended sample size based on criterion (iii) is at least 234+p.
+
+```{r}
+p <- 40
+n_crit3 <- 234 + p
+print(n_crit3)
+
+calc_sample_size_crit3 <- function(p) {
+  result <-  234 + p
+  return(result)
+}
+```
+
+### Step 6: Criterion (iv):  Criterion (iv) - ensure a precise estimate of the mean predicted outcome (model intercept).
+
+To ensure that the confidence interval of the estimate is sufficiently small (within a small range of MMOE: $1.0 \leq MMOE \leq 1.1$ ).
+
+Need to have an anticipated value of the mean and variance of the outcome ($\hat{\alpha}$ (slope in regression model) and $\hat{\sigma}$ respectively).
+
+```{r}
+
+```
+
+### Step 7: choose the maximum value of the samples estimated from all the criteria
+
+```{r}
+
+```
+
+## Further analysis using MBESS package
+
+```{r}
+library(MBESS)
+```
+
+### References
+
+::: {#refs}
+:::
