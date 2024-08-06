@@ -16,7 +16,13 @@ library(tidyverse)
 
 ## Sample size calculations for binary and time-to-event outcomes
 
+### Notes from the original article
+
 Following [@riley2018a], the sample size for binary and time-to-event outcomes is calculated based on the following criteria.
+
+"Here, we focus on binary and time-to-event outcomes, such as the risk of already having a pulmonary embolism, or the risk of developing CVD in the next 10 years. In this situation, the effective sample size is often considered to be the number of outcome events (eg, the number with existing pulmonary embolism, or the number diagnosed with CVD during follow-up). In particular, a well-used “rule of thumb” for sample size is to ensure at least 10 events per candidate predictor (variable),11-13 where “candidate” indicates a predictor in the development data set that is considered, before any variable selection, for inclusion in the final model. Note that, if a predictor is categorical with three of more categories, or continuous and modelled as a nonlinear trend, then including the predictor will require two or more parameters being included in the model. Therefore, we refer to events per predictor parameter (EPP) here, rather than events per variable."
+
+"sample size (n) and number of events (E) in the model development data set must, at the very least, meet the following three criteria: (i) small optimism in predictor effect estimates as defined by a global shrinkage factor of ≥ 0.9, (ii) small absolute difference of ≤ 0.05 in the model's apparent and adjusted Nagelkerke's R2,and (iii) precise estimation of the overall risk or rate in the population (or similarly, precise estimation of the model intercept when predictors are mean centred)."
 
 ### Step 1: Select the number of candidate predictors: \$p\$
 
@@ -38,94 +44,88 @@ p = 40
 R2_adj = 0.15
 ```
 
-### Step 3: Criterion (1): Calculate the minimum sample required to calculate the Copas' global shrinkage factor (\$S_c\$) close to 1. Generally, recommended value is an Sc greater than or equal to 0.90
+### Step 3: Criterion (1): Calculate the minimum sample required to calculate the Van Houwelingen's global shrinkage factor (\$S_c\$) close to 1. Generally, the recommended value is an Sc greater than or equal to 0.90
 
 $$
-Sc = 1 + \dfrac{p-2}{n \ln(1- \big(\dfrac{R^2_adj (n-p-1)+p}{(n-1)}\big)\big)}
+S_{VH} = 1 + \dfrac{p}{n \ln(1- \dfrac{R^2_{CS\_adj}}{S_{VH}} )}
+$$
+
+where,
+
+$$
+R^2_{CS\_adj} = S_{VH} R^2_{CS\_app} \\
+R^2_{CS\_app} = 1- \exp(\dfrac{-LR}{n})
+$$
+
+Based on the above, the number of samples required are given by,
+
+$$
+n = \dfrac{p}{(S_{VH} -1 ) \ln(1- \dfrac{R^2_{CS\_adj}}{S_{VH}})}
 $$
 
 ```{r}
 # To ensure an expected Sc >= 0.09, with 40 predictors and $R^2_adj = 0.15$
-Sc = 0.9 
+S_VH = 0.9 
 
 # The number of smaple required can be calculated using criteria 1 as: 
-calc_sample_size_crit1 <- function(Sc = 0.9, p = 40, R2_adj = 0.15) {
-  # Define the function to solve
-  equation <- function(n) {
-    lhs <- 1 + (p - 2) / (n * log(1 - ((R2_adj * (n - p - 1) + p) / (n - 1))))
-    return(lhs - Sc)
-  }
+# calculate-samplesize-for-timetoevent-based-on-criteria-1
+calc_ss_tte_crit1 <- function(p, R2_CS_adj, S_VH = 0.9) {
   
-  # Use uniroot to find the value of n that solves the equation
-  result <- uniroot(equation, interval = c(p + 2, 1e6))$root
-  return(result)
+  
+  # Calculate the sample size n
+  n <- p / ((S_VH - 1) * log(1 - (R2_CS_adj / S_VH)))
+  
+  
+  # Return the calculated sample size
+  return(n)
 }
 
+
 # # Example usage:
-# p <- 40   # Number of predictors
-# R2_adj <- 0.15  # Adjusted R-squared value
-# n <- calc_sample_size_crit1(p = p, R2_adj = R2_adj)
+# p <- 40  # Number of predictors
+# R2_CS_adj <- 0.1  # Adjusted R-squared value
+# n <- calc_ss_tte_crit1(p = p, R2_CS_adj = R2_CS_adj)
 # print(n)
-# 
-# calc_sample_size_crit1(Sc, p, R2_adj)
 
 ```
 
 n calculated from criterion 1, named n_crit1
 
+For example, for developing a new logistic regression model based on up to 40 candidate predictor parameters with an anticipated R2 CS_adj of at least 0.1, then to target an expected shrinkage of 0.9, we need a sample size of
+
 ```{r}
-n_crit1 <- calc_sample_size_crit1() %>% print
+n_crit1 <- calc_ss_tte_crit1(p=40, R2_CS_adj = 0.1, S_VH = 0.9 ) %>% print
 ```
 
 To verify the calculation, recalculate the Sc based on the $n$ estimated above
 
 ```{r}
-final_sc <-  1 + (p - 2) / (n_crit1 * log(1 - ((R2_adj * (n_crit1 - p - 1) + p) / (n_crit1 - 1))))
-print(final_sc)
+# final_sc <-  1 + (p - 2) / (n_crit1 * log(1 - ((R2_adj * (n_crit1 - p - 1) + p) / (n_crit1 - 1))))
+# print(final_sc)
 ```
 
-### Step 4: Criterion (ii): calculating sample size to ensure a small absolute difference in $R^2_{adj}$ and $R^2_{app$
+### Step 4: Criterion (ii): calculating sample size to ensure a small absolute difference in $R^2_{adj}$ and $R^2_{app}$
 
 $$
-n \geq 1 + \dfrac{p \big( 1- R^_{adj} \big)}{\delta}
+S_{VH} \geq  \dfrac{R^2_{CS_{adj}}}{R^2_{CS_{adj}} + \delta \ \max(R^2_{CS_{app}}) }
 $$
 
 ```{r}
-calc_sample_size_crit2 <- function(p, R2_adj, delta) {
-  result <- 1 + (p * (1 - R2_adj)) / delta
-  return(result)
-}
 
-n_crit2 = calc_sample_size_crit2(p=40, R2_adj = 0.15, delta = 0.05 )
-n_crit2
 ```
 
-### Step 5: Criterion (iii): precise estimate of the residual standard deviation
+### Step 5: Criterion (iii): precise estimate of over all risk in the population
 
-The recommended margin of multiplicative margin of error(MMOE): $1.0 \leq MMOE \leq 1.1$ The generally recommended sample size based on criterion (iii) is at least 234+p.
-
-```{r}
-p <- 40
-n_crit3 <- 234 + p
-print(n_crit3)
-
-calc_sample_size_crit3 <- function(p) {
-  result <-  234 + p
-  return(result)
-}
-```
-
-### Step 6: Criterion (iv):  Criterion (iv) - ensure a precise estimate of the mean predicted outcome (model intercept).
-
-To ensure that the confidence interval of the estimate is sufficiently small (within a small range of MMOE: $1.0 \leq MMOE \leq 1.1$ ).
-
-Need to have an anticipated value of the mean and variance of the outcome ($\hat{\alpha}$ (slope in regression model) and $\hat{\sigma}$ respectively).
+Absolute margin of error $\leq 0.05$
+The generally recommended sample size based on criterion (iii) is at least 234+p.
 
 ```{r}
 
 ```
 
-### Step 7: choose the maximum value of the samples estimated from all the criteria
+
+
+### Step 6: choose the maximum value of the samples estimated from all the criteria
 
 ```{r}
 

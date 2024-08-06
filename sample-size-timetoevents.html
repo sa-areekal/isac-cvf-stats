@@ -382,9 +382,35 @@ display: none;
 
 <div id="sample-size-calculations-for-binary-and-time-to-event-outcomes" class="section level2">
 <h2>Sample size calculations for binary and time-to-event outcomes</h2>
+<div id="notes-from-the-original-article" class="section level3">
+<h3>Notes from the original article</h3>
 <p>Following <span class="citation">(Riley et al. 2018)</span>, the
 sample size for binary and time-to-event outcomes is calculated based on
 the following criteria.</p>
+<p>“Here, we focus on binary and time-to-event outcomes, such as the
+risk of already having a pulmonary embolism, or the risk of developing
+CVD in the next 10 years. In this situation, the effective sample size
+is often considered to be the number of outcome events (eg, the number
+with existing pulmonary embolism, or the number diagnosed with CVD
+during follow-up). In particular, a well-used “rule of thumb” for sample
+size is to ensure at least 10 events per candidate predictor
+(variable),11-13 where “candidate” indicates a predictor in the
+development data set that is considered, before any variable selection,
+for inclusion in the final model. Note that, if a predictor is
+categorical with three of more categories, or continuous and modelled as
+a nonlinear trend, then including the predictor will require two or more
+parameters being included in the model. Therefore, we refer to events
+per predictor parameter (EPP) here, rather than events per
+variable.”</p>
+<p>“sample size (n) and number of events (E) in the model development
+data set must, at the very least, meet the following three criteria: (i)
+small optimism in predictor effect estimates as defined by a global
+shrinkage factor of ≥ 0.9, (ii) small absolute difference of ≤ 0.05 in
+the model’s apparent and adjusted Nagelkerke’s R2,and (iii) precise
+estimation of the overall risk or rate in the population (or similarly,
+precise estimation of the model intercept when predictors are mean
+centred).”</p>
+</div>
 <div id="step-1-select-the-number-of-candidate-predictors-p" class="section level3">
 <h3>Step 1: Select the number of candidate predictors: $p$</h3>
 <p>If you do not know the number of predictors, let’s assume a
@@ -401,87 +427,74 @@ previous literature</li>
 </ol>
 <pre class="r"><code>R2_adj = 0.15</code></pre>
 </div>
-<div id="step-3-criterion-1-calculate-the-minimum-sample-required-to-calculate-the-copas-global-shrinkage-factor-s_c-close-to-1.-generally-recommended-value-is-an-sc-greater-than-or-equal-to-0.90" class="section level3">
+<div id="step-3-criterion-1-calculate-the-minimum-sample-required-to-calculate-the-van-houwelingens-global-shrinkage-factor-s_c-close-to-1.-generally-the-recommended-value-is-an-sc-greater-than-or-equal-to-0.90" class="section level3">
 <h3>Step 3: Criterion (1): Calculate the minimum sample required to
-calculate the Copas’ global shrinkage factor ($S_c$) close to 1.
-Generally, recommended value is an Sc greater than or equal to 0.90</h3>
+calculate the Van Houwelingen’s global shrinkage factor ($S_c$) close to
+1. Generally, the recommended value is an Sc greater than or equal to
+0.90</h3>
 <p><span class="math display">\[
-Sc = 1 + \dfrac{p-2}{n \ln(1- \big(\dfrac{R^2_adj
-(n-p-1)+p}{(n-1)}\big)\big)}
+S_{VH} = 1 + \dfrac{p}{n \ln(1- \dfrac{R^2_{CS\_adj}}{S_{VH}} )}
+\]</span></p>
+<p>where,</p>
+<p><span class="math display">\[
+R^2_{CS\_adj} = S_{VH} R^2_{CS\_app} \\
+R^2_{CS\_app} = 1- \exp(\dfrac{-LR}{n})
+\]</span></p>
+<p>Based on the above, the number of samples required are given by,</p>
+<p><span class="math display">\[
+n = \dfrac{p}{(S_{VH} -1 ) \ln(1- \dfrac{R^2_{CS\_adj}}{S_{VH}})}
 \]</span></p>
 <pre class="r"><code># To ensure an expected Sc &gt;= 0.09, with 40 predictors and $R^2_adj = 0.15$
-Sc = 0.9 
+S_VH = 0.9 
 
 # The number of smaple required can be calculated using criteria 1 as: 
-calc_sample_size_crit1 &lt;- function(Sc = 0.9, p = 40, R2_adj = 0.15) {
-  # Define the function to solve
-  equation &lt;- function(n) {
-    lhs &lt;- 1 + (p - 2) / (n * log(1 - ((R2_adj * (n - p - 1) + p) / (n - 1))))
-    return(lhs - Sc)
-  }
+# calculate-samplesize-for-timetoevent-based-on-criteria-1
+calc_ss_tte_crit1 &lt;- function(p, R2_CS_adj, S_VH = 0.9) {
   
-  # Use uniroot to find the value of n that solves the equation
-  result &lt;- uniroot(equation, interval = c(p + 2, 1e6))$root
-  return(result)
+  
+  # Calculate the sample size n
+  n &lt;- p / ((S_VH - 1) * log(1 - (R2_CS_adj / S_VH)))
+  
+  
+  # Return the calculated sample size
+  return(n)
 }
 
+
 # # Example usage:
-# p &lt;- 40   # Number of predictors
-# R2_adj &lt;- 0.15  # Adjusted R-squared value
-# n &lt;- calc_sample_size_crit1(p = p, R2_adj = R2_adj)
-# print(n)
-# 
-# calc_sample_size_crit1(Sc, p, R2_adj)</code></pre>
+# p &lt;- 40  # Number of predictors
+# R2_CS_adj &lt;- 0.1  # Adjusted R-squared value
+# n &lt;- calc_ss_tte_crit1(p = p, R2_CS_adj = R2_CS_adj)
+# print(n)</code></pre>
 <p>n calculated from criterion 1, named n_crit1</p>
-<pre class="r"><code>n_crit1 &lt;- calc_sample_size_crit1() %&gt;% print</code></pre>
-<pre><code>## [1] 2089.558</code></pre>
+<p>For example, for developing a new logistic regression model based on
+up to 40 candidate predictor parameters with an anticipated R2 CS_adj of
+at least 0.1, then to target an expected shrinkage of 0.9, we need a
+sample size of</p>
+<pre class="r"><code>n_crit1 &lt;- calc_ss_tte_crit1(p=40, R2_CS_adj = 0.1, S_VH = 0.9 ) %&gt;% print</code></pre>
+<pre><code>## [1] 3396.075</code></pre>
 <p>To verify the calculation, recalculate the Sc based on the <span class="math inline">\(n\)</span> estimated above</p>
-<pre class="r"><code>final_sc &lt;-  1 + (p - 2) / (n_crit1 * log(1 - ((R2_adj * (n_crit1 - p - 1) + p) / (n_crit1 - 1))))
-print(final_sc)</code></pre>
-<pre><code>## [1] 0.9</code></pre>
+<pre class="r"><code># final_sc &lt;-  1 + (p - 2) / (n_crit1 * log(1 - ((R2_adj * (n_crit1 - p - 1) + p) / (n_crit1 - 1))))
+# print(final_sc)</code></pre>
 </div>
 <div id="step-4-criterion-ii-calculating-sample-size-to-ensure-a-small-absolute-difference-in-r2_adj-and-r2_app" class="section level3">
 <h3>Step 4: Criterion (ii): calculating sample size to ensure a small
 absolute difference in <span class="math inline">\(R^2_{adj}\)</span>
-and <span class="math inline">\(R^2_{app\)</span></h3>
+and <span class="math inline">\(R^2_{app}\)</span></h3>
 <p><span class="math display">\[
-n \geq 1 + \dfrac{p \big( 1- R^_{adj} \big)}{\delta}
+S_{VH} \geq  \dfrac{R^2_{CS_{adj}}}{R^2_{CS_{adj}} + \delta \
+\max(R^2_{CS_{app}}) }
 \]</span></p>
-<pre class="r"><code>calc_sample_size_crit2 &lt;- function(p, R2_adj, delta) {
-  result &lt;- 1 + (p * (1 - R2_adj)) / delta
-  return(result)
-}
-
-n_crit2 = calc_sample_size_crit2(p=40, R2_adj = 0.15, delta = 0.05 )
-n_crit2</code></pre>
-<pre><code>## [1] 681</code></pre>
 </div>
-<div id="step-5-criterion-iii-precise-estimate-of-the-residual-standard-deviation" class="section level3">
-<h3>Step 5: Criterion (iii): precise estimate of the residual standard
-deviation</h3>
-<p>The recommended margin of multiplicative margin of error(MMOE): <span class="math inline">\(1.0 \leq MMOE \leq 1.1\)</span> The generally
-recommended sample size based on criterion (iii) is at least 234+p.</p>
-<pre class="r"><code>p &lt;- 40
-n_crit3 &lt;- 234 + p
-print(n_crit3)</code></pre>
-<pre><code>## [1] 274</code></pre>
-<pre class="r"><code>calc_sample_size_crit3 &lt;- function(p) {
-  result &lt;-  234 + p
-  return(result)
-}</code></pre>
+<div id="step-5-criterion-iii-precise-estimate-of-over-all-risk-in-the-population" class="section level3">
+<h3>Step 5: Criterion (iii): precise estimate of over all risk in the
+population</h3>
+<p>Absolute margin of error <span class="math inline">\(\leq
+0.05\)</span> The generally recommended sample size based on criterion
+(iii) is at least 234+p.</p>
 </div>
-<div id="step-6-criterion-iv-criterion-iv---ensure-a-precise-estimate-of-the-mean-predicted-outcome-model-intercept." class="section level3">
-<h3>Step 6: Criterion (iv):  Criterion (iv) - ensure a precise estimate
-of the mean predicted outcome (model intercept).</h3>
-<p>To ensure that the confidence interval of the estimate is
-sufficiently small (within a small range of MMOE: <span class="math inline">\(1.0 \leq MMOE \leq 1.1\)</span> ).</p>
-<p>Need to have an anticipated value of the mean and variance of the
-outcome (<span class="math inline">\(\hat{\alpha}\)</span> (slope in
-regression model) and <span class="math inline">\(\hat{\sigma}\)</span>
-respectively).</p>
-</div>
-<div id="step-7-choose-the-maximum-value-of-the-samples-estimated-from-all-the-criteria" class="section level3">
-<h3>Step 7: choose the maximum value of the samples estimated from all
+<div id="step-6-choose-the-maximum-value-of-the-samples-estimated-from-all-the-criteria" class="section level3">
+<h3>Step 6: choose the maximum value of the samples estimated from all
 the criteria</h3>
 </div>
 </div>
