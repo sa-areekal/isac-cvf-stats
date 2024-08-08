@@ -97,33 +97,114 @@ For example, for developing a new logistic regression model based on up to 40 ca
 n_crit1 <- calc_ss_tte_crit1(p=40, R2_CS_adj = 0.1, S_VH = 0.9 ) %>% print
 ```
 
-To verify the calculation, recalculate the Sc based on the $n$ estimated above
+To verify the calculation, recalculateOur sample size proposal in Equation (11) requires researchers to provide a value for the model's R2 CS_adj,thatis,toprespecify the anticipated Cox-Snell R2 value if the model was applied to new individuals. How should this be done? We recommend using R2 CS_adj values from previous prediction model studies for the same (or similar) population, considering the same (or similar) outcomes and time points of interest. For example, the researcher could consult systematic reviews of existing models and their performance, which are also increasingly av the Sc based on the $n$ estimated above
 
 ```{r}
 # final_sc <-  1 + (p - 2) / (n_crit1 * log(1 - ((R2_adj * (n_crit1 - p - 1) + p) / (n_crit1 - 1))))
 # print(final_sc)
 ```
 
-### Step 4: Criterion (ii): calculating sample size to ensure a small absolute difference in $R^2_{adj}$ and $R^2_{app}$
+#### Translating the calculated sample size to the number of events and EPP
+
+For binary outcomes $E = n \phi$ and $EPP = n \phi/p$, where $\phi$ is the overall outcome proportion.
+
+### Step 4: Criterion (ii): ensuring a small absolute difference ($\delta \leq 0.05$ ) in the apparent and adjusted\$R\^2\_{Nagelkerke}\$
+
+"Nagelkerke's “proportion of total variance explained”, @nagelkerke1991 which is calculated as $R^2_{CS}/\max(R^2_{CS})$ where $R2_{CS}$ is the Cox-Snell $R^2$
 
 $$
 S_{VH} \geq  \dfrac{R^2_{CS_{adj}}}{R^2_{CS_{adj}} + \delta \ \max(R^2_{CS_{app}}) }
 $$
 
 ```{r}
+calc_S_VH <- function(R2_CS_adj, delta, max_R2_CS_app) {
+  # Calculate S_VH using the given formula
+  S_VH <- R2_CS_adj / (R2_CS_adj + delta * max_R2_CS_app)
+  
+  # Return the calculated S_VH
+  return(S_VH)
+}
+
+# "For example, consider the development of a logistic regression model with anticipated R2 CS_adj of at least 0.1, and in a setting with the outcome proportion of 5%, such that the max(R2 CS_app) is 0.33. Then, to ensure 𝛿 is ≤ 0.05," 
+R2_CS_adj <- 0.1  # Adjusted Cox-Snell R-squared value
+delta <- 0.05       # Delta value
+max_R2_CS_app <- 0.33  # Maximum apparent R-squared value
+
+S_VH <- calc_S_VH(R2_CS_adj = R2_CS_adj, delta = delta, max_R2_CS_app = max_R2_CS_app)
+print(S_VH)
 
 ```
 
-### Step 5: Criterion (iii): precise estimate of over all risk in the population
+As this is lower than the recommended value of at least 0.90 to meet criterion (i), no further work is required.
 
-Absolute margin of error $\leq 0.05$
-The generally recommended sample size based on criterion (iii) is at least 234+p.
+However, had the anticipated R2 CS_adj been 0.2, then
+
+```{r}
+S_VH_2 <- calc_S_VH(R2_CS_adj = 0.2, delta = delta, max_R2_CS_app = max_R2_CS_app)
+print(S_VH_2)
+```
+
+As this is higher than 0.90, we would need to reapply sample size equation (11) using 0.924, rather than 0.90, to obtain a sample size that meets both criteria (i) and (ii).
+
+```{r}
+n_crit2 <- calc_ss_tte_crit1(p=40, R2_CS_adj = 0.1, S_VH = 0.924 ) %>% print
+```
+
+Had the anticipated R2 CS_adj been 0.01, then
+
+```{r}
+(S_VH_2 <- calc_S_VH(R2_CS_adj = 0.01, delta = delta, max_R2_CS_app = 0.33))
+
+```
+
+### Step 5: Criterion (iii): ensure precise estimate of overall risk (model intercept)
+
+"For logistic and time-to-event models, it is fundamental that the available sample size can precisely estimate the overall risk in the population by key time-points of interest. One way to examine this is to calculate the margin of error in outcome proportion estimates ( ̂ 𝜙) for a null model (ie, no predictors included). "
+
+#### Binary outcomes
+
+For example, for a binary outcome, an approximate 95% confidence interval for the overall outcome proportion is
+
+$$
+\hat{\phi} \pm 1.96 \sqrt{\frac{\hat{\phi}(1 - \hat{\phi})}{n}} 
+$$
+
+Therefore, the absolute margin of error is $1.96 \sqrt{\frac{\hat{\phi}(1-\hat{\phi})}{n}}$
+
+which leads to $n = \left( \frac{1.96}{\delta} \right)^2 \hat{\phi}(1 - \hat{\phi})$.
+
+This is largest when the outcome proportion is 0.5.
+
+```{r}
+ # Calculate n using the provided formula $n = \left( \frac{1.96}{\delta} \right)^2 \hat{\phi}(1 - \hat{\phi})$. 
+
+calc_ss_bi_crit3 <- function(phi_hat, delta) {
+  # Calculate n using the provided formula
+  n <- ((1.96 / delta)^2) * phi_hat * (1 - phi_hat)
+  
+  # Return the calculated sample size
+  return(n)
+}
+```
+
+We require 96 individuals to ensure a margin of error ≤ 0.1 when the true value is 0.5."
 
 ```{r}
 
+(n_bi <- calc_ss_bi_crit3(phi_hat = 0.5, delta = 0.1) )
 ```
 
+For a more stringent margin of error ≤ 0.05, which, when the outcome proportion is 0.5, requires
 
+```{r}
+(n_bi <- calc_ss_bi_crit3(phi_hat = 0.5, delta = 0.05) )
+```
+
+#### Time to event outcomes
+
+"For time-to-event data, we could consider the precision of the estimated cumulative incidence (outcome risk) at a key time point of interest. A simple (and therefore practical) approach is to assume an exponential survival model, for which the estimated cumulative incidence function is $F(t) = 1 − exp(− \hat{𝜆} t)$, where $\hat{𝜆}$ is the estimated rate (number of events per person-year)."
+
+An approximate 95% confidence interval for the estimated $F(t)$ is $1 − \exp \left( − \left( \hat{𝜆} ± 1.96 \sqrt{\frac{\hat{𝜆}}{T}} \right) t \right)$ ,where $T$ is the total person-years of follow-up.
 
 ### Step 6: choose the maximum value of the samples estimated from all the criteria
 
