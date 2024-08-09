@@ -34,7 +34,7 @@ p = 40
 
 ```
 
-### Step 2: The anticipated proportion of variance explained $R^2_{adj}$
+### Step 2: The anticipated proportion of variance explained $R^2_{adj}$ and max($R^2_{adj}$)
 
 1.  Choose $R^2_{adj}$ based on previous literature
 2.  In the absence of any evidence choose \$R\^2\_{CS_adj}= 0.1\$
@@ -210,6 +210,8 @@ An approximate 95% confidence interval for the estimated $F(t)$ is $1 − \exp \
 
 ```{r}
 
+# sample_size <- max(n_crit1, n_crit2, n_crit3)
+  
 ```
 
 ## Further analysis using MBESS package
