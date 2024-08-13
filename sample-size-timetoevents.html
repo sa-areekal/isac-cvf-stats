@@ -412,20 +412,45 @@ precise estimation of the model intercept when predictors are mean
 centred).”</p>
 </div>
 <div id="step-1-select-the-number-of-candidate-predictors-p" class="section level3">
-<h3>Step 1: Select the number of candidate predictors: $p$</h3>
+<h3>Step 1: Select the number of candidate predictors: <span class="math inline">\(p\)</span></h3>
 <p>If you do not know the number of predictors, let’s assume a
 relatively high value for p=40</p>
 <pre class="r"><code># define p: number of predictors in the model
 p = 40</code></pre>
 </div>
-<div id="step-2-the-anticipated-proportion-of-variance-explained-r2_adj" class="section level3">
-<h3>Step 2: The anticipated proportion of variance explained <span class="math inline">\(R^2_{adj}\)</span></h3>
+<div id="step-2-identifying-values-for-variance-explained-r2_adj-and-maxr2_adj" class="section level3">
+<h3>Step 2: identifying values for variance explained <span class="math inline">\(R^2_{adj}\)</span> and max(<span class="math inline">\(R^2_{adj}\)</span>)</h3>
 <ol style="list-style-type: decimal">
 <li>Choose <span class="math inline">\(R^2_{adj}\)</span> based on
 previous literature</li>
 <li>In the absence of any evidence choose $R^2_{CS_adj}= 0.1$</li>
 </ol>
 <pre class="r"><code>R2_adj = 0.15</code></pre>
+<div id="example-from-literature" class="section level4">
+<h4>Example from Literature</h4>
+<p>sample size = 1200 median follow-up = 22 months 2483 person-years of
+follow-up 161 (13.42%) individuals had a recurrence “The model included
+predictors of age, gender, site of first clot, D-dimer level, and the
+lag time from cessation of therapy until measurement of D-dimer (often
+around 30 days).”</p>
+<pre class="r"><code>sample</code></pre>
+<pre><code>## function (x, size, replace = FALSE, prob = NULL) 
+## {
+##     if (length(x) == 1L &amp;&amp; is.numeric(x) &amp;&amp; is.finite(x) &amp;&amp; x &gt;= 
+##         1) {
+##         if (missing(size)) 
+##             size &lt;- x
+##         sample.int(x, size, replace, prob)
+##     }
+##     else {
+##         if (missing(size)) 
+##             size &lt;- length(x)
+##         x[sample.int(length(x), size, replace, prob)]
+##     }
+## }
+## &lt;bytecode: 0x000001f71f148b18&gt;
+## &lt;environment: namespace:base&gt;</code></pre>
+</div>
 </div>
 <div id="step-3-criterion-1-calculate-the-minimum-sample-required-to-calculate-the-van-houwelingens-global-shrinkage-factor-s_c-close-to-1.-generally-the-recommended-value-is-an-sc-greater-than-or-equal-to-0.90" class="section level3">
 <h3>Step 3: Criterion (1): Calculate the minimum sample required to
@@ -473,7 +498,7 @@ at least 0.1, then to target an expected shrinkage of 0.9, we need a
 sample size of</p>
 <pre class="r"><code>n_crit1 &lt;- calc_ss_tte_crit1(p=40, R2_CS_adj = 0.1, S_VH = 0.9 ) %&gt;% print</code></pre>
 <pre><code>## [1] 3396.075</code></pre>
-<p>To verify the calculation, recalculateOur sample size proposal in
+<p>To verify the calculation, recalculate “Our sample size proposal in
 Equation (11) requires researchers to provide a value for the model’s R2
 CS_adj,thatis,toprespecify the anticipated Cox-Snell R2 value if the
 model was applied to new individuals. How should this be done? We
@@ -492,9 +517,9 @@ and <span class="math inline">\(EPP = n \phi/p\)</span>, where <span class="math
 proportion.</p>
 </div>
 </div>
-<div id="step-4-criterion-ii-ensuring-a-small-absolute-difference-delta-leq-0.05-in-the-apparent-and-adjustedr2_nagelkerke" class="section level3">
+<div id="step-4-criterion-ii-ensuring-a-small-absolute-difference-delta-leq-0.05-in-the-apparent-and-adjusted-r2_nagelkerke" class="section level3">
 <h3>Step 4: Criterion (ii): ensuring a small absolute difference (<span class="math inline">\(\delta \leq 0.05\)</span> ) in the apparent and
-adjusted$R^2_{Nagelkerke}$</h3>
+adjusted <span class="math inline">\(R^2_{Nagelkerke}\)</span></h3>
 <p>“Nagelkerke’s “proportion of total variance explained”, <span class="citation">NAGELKERKE (1991)</span> which is calculated as <span class="math inline">\(R^2_{CS}/\max(R^2_{CS})\)</span> where <span class="math inline">\(R2_{CS}\)</span> is the Cox-Snell <span class="math inline">\(R^2\)</span></p>
 <p><span class="math display">\[
 S_{VH} \geq  \dfrac{R^2_{CS_{adj}}}{R^2_{CS_{adj}} + \delta \

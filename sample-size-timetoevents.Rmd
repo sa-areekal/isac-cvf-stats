@@ -24,7 +24,7 @@ Following [@riley2018a], the sample size for binary and time-to-event outcomes i
 
 "sample size (n) and number of events (E) in the model development data set must, at the very least, meet the following three criteria: (i) small optimism in predictor effect estimates as defined by a global shrinkage factor of ≥ 0.9, (ii) small absolute difference of ≤ 0.05 in the model's apparent and adjusted Nagelkerke's R2,and (iii) precise estimation of the overall risk or rate in the population (or similarly, precise estimation of the model intercept when predictors are mean centred)."
 
-### Step 1: Select the number of candidate predictors: \$p\$
+### Step 1: Select the number of candidate predictors: $p$
 
 If you do not know the number of predictors, let's assume a relatively high value for p=40
 
@@ -34,7 +34,7 @@ p = 40
 
 ```
 
-### Step 2: The anticipated proportion of variance explained $R^2_{adj}$ and max($R^2_{adj}$)
+### Step 2: identifying values for variance explained $R^2_{adj}$ and max($R^2_{adj}$)
 
 1.  Choose $R^2_{adj}$ based on previous literature
 2.  In the absence of any evidence choose \$R\^2\_{CS_adj}= 0.1\$
@@ -42,6 +42,14 @@ p = 40
 ```{r}
 
 R2_adj = 0.15
+```
+
+#### Example from Literature
+
+sample size = 1200 median follow-up = 22 months 2483 person-years of follow-up 161 (13.42%) individuals had a recurrence "The model included predictors of age, gender, site of first clot, D-dimer level, and the lag time from cessation of therapy until measurement of D-dimer (often around 30 days)."
+
+```{r}
+sample
 ```
 
 ### Step 3: Criterion (1): Calculate the minimum sample required to calculate the Van Houwelingen's global shrinkage factor (\$S_c\$) close to 1. Generally, the recommended value is an Sc greater than or equal to 0.90
@@ -97,7 +105,8 @@ For example, for developing a new logistic regression model based on up to 40 ca
 n_crit1 <- calc_ss_tte_crit1(p=40, R2_CS_adj = 0.1, S_VH = 0.9 ) %>% print
 ```
 
-To verify the calculation, recalculateOur sample size proposal in Equation (11) requires researchers to provide a value for the model's R2 CS_adj,thatis,toprespecify the anticipated Cox-Snell R2 value if the model was applied to new individuals. How should this be done? We recommend using R2 CS_adj values from previous prediction model studies for the same (or similar) population, considering the same (or similar) outcomes and time points of interest. For example, the researcher could consult systematic reviews of existing models and their performance, which are also increasingly av the Sc based on the $n$ estimated above
+To verify the calculation, recalculate
+"Our sample size proposal in Equation (11) requires researchers to provide a value for the model's R2 CS_adj,thatis,toprespecify the anticipated Cox-Snell R2 value if the model was applied to new individuals. How should this be done? We recommend using R2 CS_adj values from previous prediction model studies for the same (or similar) population, considering the same (or similar) outcomes and time points of interest. For example, the researcher could consult systematic reviews of existing models and their performance, which are also increasingly av the Sc based on the $n$ estimated above
 
 ```{r}
 # final_sc <-  1 + (p - 2) / (n_crit1 * log(1 - ((R2_adj * (n_crit1 - p - 1) + p) / (n_crit1 - 1))))
@@ -108,7 +117,7 @@ To verify the calculation, recalculateOur sample size proposal in Equation (11) 
 
 For binary outcomes $E = n \phi$ and $EPP = n \phi/p$, where $\phi$ is the overall outcome proportion.
 
-### Step 4: Criterion (ii): ensuring a small absolute difference ($\delta \leq 0.05$ ) in the apparent and adjusted\$R\^2\_{Nagelkerke}\$
+### Step 4: Criterion (ii): ensuring a small absolute difference ($\delta \leq 0.05$ ) in the apparent and adjusted $R^2_{Nagelkerke}$
 
 "Nagelkerke's “proportion of total variance explained”, @nagelkerke1991 which is calculated as $R^2_{CS}/\max(R^2_{CS})$ where $R2_{CS}$ is the Cox-Snell $R^2$
 
