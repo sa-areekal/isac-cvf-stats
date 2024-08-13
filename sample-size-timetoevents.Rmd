@@ -105,8 +105,7 @@ For example, for developing a new logistic regression model based on up to 40 ca
 n_crit1 <- calc_ss_tte_crit1(p=40, R2_CS_adj = 0.1, S_VH = 0.9 ) %>% print
 ```
 
-To verify the calculation, recalculate
-"Our sample size proposal in Equation (11) requires researchers to provide a value for the model's R2 CS_adj,thatis,toprespecify the anticipated Cox-Snell R2 value if the model was applied to new individuals. How should this be done? We recommend using R2 CS_adj values from previous prediction model studies for the same (or similar) population, considering the same (or similar) outcomes and time points of interest. For example, the researcher could consult systematic reviews of existing models and their performance, which are also increasingly av the Sc based on the $n$ estimated above
+To verify the calculation, recalculate "Our sample size proposal in Equation (11) requires researchers to provide a value for the model's R2 CS_adj,thatis,toprespecify the anticipated Cox-Snell R2 value if the model was applied to new individuals. How should this be done? We recommend using R2 CS_adj values from previous prediction model studies for the same (or similar) population, considering the same (or similar) outcomes and time points of interest. For example, the researcher could consult systematic reviews of existing models and their performance, which are also increasingly av the Sc based on the $n$ estimated above
 
 ```{r}
 # final_sc <-  1 + (p - 2) / (n_crit1 * log(1 - ((R2_adj * (n_crit1 - p - 1) + p) / (n_crit1 - 1))))
