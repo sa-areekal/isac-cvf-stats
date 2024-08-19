@@ -49,7 +49,7 @@ R2_adj = 0.15
 sample size = 1200 median follow-up = 22 months 2483 person-years of follow-up 161 (13.42%) individuals had a recurrence "The model included predictors of age, gender, site of first clot, D-dimer level, and the lag time from cessation of therapy until measurement of D-dimer (often around 30 days)."
 
 ```{r}
-sample
+# sample
 ```
 
 ### Step 3: Criterion (1): Calculate the minimum sample required to calculate the Van Houwelingen's global shrinkage factor (\$S_c\$) close to 1. Generally, the recommended value is an Sc greater than or equal to 0.90
@@ -102,10 +102,14 @@ n calculated from criterion 1, named n_crit1
 For example, for developing a new logistic regression model based on up to 40 candidate predictor parameters with an anticipated R2 CS_adj of at least 0.1, then to target an expected shrinkage of 0.9, we need a sample size of
 
 ```{r}
-n_crit1 <- calc_ss_tte_crit1(p=40, R2_CS_adj = 0.1, S_VH = 0.9 ) %>% print
+n_crit1 <- calc_ss_tte_crit1(p=40, R2_CS_adj = 0.00, S_VH = 0.9 ) %>% print
 ```
 
-To verify the calculation, recalculate "Our sample size proposal in Equation (11) requires researchers to provide a value for the model's R2 CS_adj,thatis,toprespecify the anticipated Cox-Snell R2 value if the model was applied to new individuals. How should this be done? We recommend using R2 CS_adj values from previous prediction model studies for the same (or similar) population, considering the same (or similar) outcomes and time points of interest. For example, the researcher could consult systematic reviews of existing models and their performance, which are also increasingly av the Sc based on the $n$ estimated above
+```{r}
+calc_ss_tte_crit1(p=40, R2_CS_adj = 0.05, S_VH = 0.9 ) %>% print
+```
+
+"Our sample size proposal in Equation (11) requires researchers to provide a value for the model's R2 CS_adj,thatis,toprespecify the anticipated Cox-Snell R2 value if the model was applied to new individuals. How should this be done? We recommend using R2 CS_adj values from previous prediction model studies for the same (or similar) population, considering the same (or similar) outcomes and time points of interest. For example, the researcher could consult systematic reviews of existing models and their performance, which are also increasingly av the Sc based on the $n$ estimated above
 
 ```{r}
 # final_sc <-  1 + (p - 2) / (n_crit1 * log(1 - ((R2_adj * (n_crit1 - p - 1) + p) / (n_crit1 - 1))))
