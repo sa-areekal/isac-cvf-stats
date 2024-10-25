@@ -126,7 +126,7 @@ print(paste("Vascular dementia incidence is",VD_inc*100000, "cases per 100000 pe
 
 Assuming an event rate of 163 per 100,000 years, a median follow up of 9.5 years, a conservative estimate of Nagelkerke's R-squared statistic of 0.15 and a maximum number of 40 parameters per model, the number of sample size required is:
 
-### Calculating max($R^2_{CS_app}$)
+### Calculating max($R^2_{CS_{app}}$)
 
 For example, assuming (for simplicity) an exponential survival model was fitted
 
@@ -147,7 +147,7 @@ For Nagelkerke's R-squared statistic to be 0.15, the $R^2_{app}$
 (R_2_app <-  0.15 * max_R2_cs_app )
 ```
 
-From Eq. 8, the estimated $R^2_{adl}$ is
+From Eq. 8, the estimated $R^2_{adj}$ is
 
 ```{r}
 (R_2_adj_cal <- 0.9 * R_2_app)
@@ -193,7 +193,7 @@ calc_S_VH <- function(R2_CS_adj, delta, max_R2_CS_app) {
 ```
 
 ```{r}
-(sample_VaD <- calc_ss_tte_crit1(p = 26, R2_CS_adj = R_2_adj_cal, S_VH = 0.94))
+(sample_VaD <- calc_ss_tte_crit1(p = 25, R2_CS_adj = R_2_adj_cal, S_VH = 0.94))
 ```
 
 ## crit 3
